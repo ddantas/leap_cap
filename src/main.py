@@ -1,13 +1,15 @@
-from PyQt4 import QtGui  # Import the PyQt4 module we'll need
+from PyQt4 import QtGui, QtCore  # Import the PyQt4 module we'll need
 import sys  # We need sys so that we can pass argv to QApplication
-
+import threading
 import design  # This file holds our MainWindow and all design related things
-
+import time
 # it also keeps events etc that we defined in Qt Designer
 import os  # For listing directory methods
 
 
 class ExampleApp(QtGui.QMainWindow, design.Ui_MainWindow):
+    keyPressed = QtCore.pyqtSignal(QtCore.QEvent)
+    
     def __init__(self):
         # Explaining super is out of the scope of this article
         # So please google it if you're not familar with it
@@ -15,11 +17,14 @@ class ExampleApp(QtGui.QMainWindow, design.Ui_MainWindow):
         # access variables, methods etc in the design.py file
         super(self.__class__, self).__init__()
         self.setupUi(self)  # This is defined in design.py file automatically
-        self.pushButton.clicked.connect(self.start)        
-    	
+        self.pushButton.clicked.connect(self.startLeap)        
+    	self.pushButton.clicked.connect(self.startKey)
+    def keyPressEvent(self, event):
+        super(ExampleApp, self).keyPressEvent(event)
+        self.keyPressed.emit(event)
 
-
-def main():
+class main():
+   
     app = QtGui.QApplication(sys.argv)  # A new instance of QApplication
     form = ExampleApp()  # We set the form to be our ExampleApp (design)
     form.show()  # Show the form
