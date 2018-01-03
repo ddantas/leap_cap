@@ -4,6 +4,9 @@ from PyQt4.QtCore import QTimer
 import time, string, os
 import threading
 from datetime import datetime
+import keyboard
+
+tempcap = 0.5
 	
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -23,7 +26,6 @@ class Infor(object):
     		info.img = img
 	def set_temp(info, temp):
 		info.temp = temp
-N = -1
 
 class Ui_MainWindow(object):
 
@@ -82,12 +84,17 @@ class Ui_MainWindow(object):
         self.label_4.setObjectName(_fromUtf8("label"))
 	self.label_4.hide()
 
-        self.horizontalSlider = QtGui.QSlider(self.centralwidget)
-        self.horizontalSlider.setGeometry(QtCore.QRect(100, 650, 1000, 40))
-	
-        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.horizontalSlider.setObjectName(_fromUtf8("horizontalreadRoutiner"))
-	self.horizontalSlider.hide()
+	self.progressBar = QtGui.QProgressBar(self.centralwidget)
+        self.progressBar.setGeometry(QtCore.QRect(150, 650, 1000, 25))
+        self.progressBar.setObjectName(_fromUtf8("progressBar"))
+    	self.progressBar.hide()
+
+	self.progressBar_2 = QtGui.QProgressBar(self.centralwidget)
+        self.progressBar_2.setGeometry(QtCore.QRect(350, 600, 500, 15))
+        self.progressBar_2.setObjectName(_fromUtf8("progressBar"))
+	self.progressBar_2.setFormat(_fromUtf8(""))
+    	self.progressBar_2.hide()
+
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
@@ -126,9 +133,8 @@ class Ui_MainWindow(object):
 	f = open('../routine/default.txt','r')
 
     	self.lines = f.read().splitlines()
-	
-	
 
+	
     def retranslateUi(self, MainWindow):
 
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
@@ -148,19 +154,17 @@ class Ui_MainWindow(object):
 	for linha in self.lines:
 		i = i + 1
 	return i
-
-    def start(self):
-	self.keyPressed.connect(self.on_key)
 	
-	qtdimg = self.contImg()
+    def start(self):
+
+	self.qtdimg = self.contImg()
 	self.line.hide()
 	self.pushButton.hide()
 	self.pushButton_2.hide()
-
-	self.horizontalSlider.setMaximum(qtdimg-1)
-	self.horizontalSlider.show()	
-        self.horizontalSlider.setEnabled(False)
-
+	
+	self.progressBar.show()	
+        self.progressBar_2.show()	
+        
     	self.readRoutine()
 	
     def carrega(self):
@@ -178,27 +182,38 @@ class Ui_MainWindow(object):
 			atributo = linha.split(';')
 			imagem = str(atributo[0])
 			temp = int(atributo[1])
-			temp = temp * 1000
 			
 			l = Infor()
 			Infor.set_img(l, imagem)
 			Infor.set_temp(l, temp)
 			self.sequencia.append(l)
 	self.PrintScreen()
+
+
+    def calculaSalto(self):
+	
+	return float(100.0/len(self.sequencia))
 	
     def PrintScreen(self):
-    	pos = 0
+    	pos = 0.0
 	self.label.hide()
 	self.pushButton.hide()
-
-			
+	
+	tamsalto = 0.0
+	tamsalto = self.calculaSalto()
+	
 	for item in self.sequencia: #PERCORRE TODA A SAQUENCIA DE COMANDOS ARMAZENADA
-		self.horizontalSlider.setValue(pos)
-		pos = pos+1
+		self.progressBar.setProperty("value", pos)
+		pos += tamsalto
 		self.label_2.show()
 		self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><img src=\":../images/"+item.img+".JPG\"/></p></body></html>", None))	
 
-		QtTest.QTest.qWait(item.temp)
+		cursor = float(25.0/item.temp)
+		c = 0		
+		while c <= 100:
+			c += cursor
+			self.progressBar_2.setProperty("value", c)
+ 			QtTest.QTest.qWait(250)
 
     def startLeap(self):
 
@@ -210,66 +225,48 @@ class Ui_MainWindow(object):
     	self.thingOne.start()
 	self.start()
 
-    def on_key(self, event):
-	sete = 0
-	oito = 0
-	
-        global N
-    	if event.key() == QtCore.Qt.Key_7:
-	    sete = 100   
-	    N = 7
-	if event.key() == QtCore.Qt.Key_8:
-	    oito = 100
-            N = 8
-	if event.key() == QtCore.Qt.Key_9:
-            N = 9
-	if event.key() == QtCore.Qt.Key_0:
-            N = 0
-	#if event.key() == QtCore.Qt.Key_Space:
-        if event.key() == QtCore.Qt.Key_5:
-            N = 5
-
 class ThreadOne(threading.Thread):
     
     def run(self):
 	
-	global N
-	dt = 0
-	
 	arq = open('../routine/log.txt','a')
-    	arq.write('\n')
-	
 	now = datetime.now()
 	nowS = str(now)
-	
 	date = str(nowS[0:19])
-	print date+"\n"
-	arq.write("\nNOVA ROTINA -- "+str(date)+"\n")
+
+	arq.write("NOVA ROTINA -- "+str(date)+"\n\n")
+	dt = 0
 
 	while 1==1:
 		arq = open('../routine/log.txt','a')
-    		arq.write('\n')
+    		arq.write(str(dt)+";")
 
+		if keyboard.is_pressed('space'):
+			arq.write("100 ;")
+		else :
+			arq.write(" 0 ;")
 
-		if N == -1:
-			arq.write("%2.1f;0;0;0;0;0"% dt)
-			#print ("%2.1f;0;0;0;0;0"% dt)
-		if N == 5:
-			arq.write("%2.1f;100;0;0;0;0"% dt)
-			#print("%2.1f;100;0;0;0;0"% dt)
-		if N == 7:
-			arq.write("%2.1f;0;100;0;0;0"% dt)
-			#print ("%2.1f;0;100;0;0;0"% dt)
-		if N == 8:
-			arq.write("%2.1f;0;0;100;0;0"% dt)
-			#print("%2.1f;0;0;100;0;0"% dt)
-		if N == 9:
-			arq.write("%2.1f;0;0;0;100;0"% dt)
-			#print("%2.1f;0;0;0;100;0"% dt)
-		if N == 0:
-			arq.write("%2.1f;0;0;0;0;100"% dt)
-			#print("%2.1f;0;0;0;0;100"% dt) 
+		if keyboard.is_pressed('7'):
+			arq.write(" 100 ;")
+		else :
+			arq.write(" 0 ;")
+
+		if keyboard.is_pressed('8'):
+			arq.write(" 100 ;")
+		else :
+			arq.write(" 0 ;")
+
+		if keyboard.is_pressed('9'):
+			arq.write(" 100 ;")
+		else :
+			arq.write(" 0 ;")
+
+		if keyboard.is_pressed('0'):
+			arq.write(" 100;\n")
+		else :
+			arq.write(" 0;\n")
+ 
 		dt+=0.1
-		N = -1
-		time.sleep(0.5)#DEIXAR DE FACIL ACESSO PARA ALTERAR SE NECESSARIO
-		
+		global tempcap
+		time.sleep(tempcap)#DEIXAR DE FACIL ACESSO PARA ALTERAR SE NECESSARIO
+
