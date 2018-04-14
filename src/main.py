@@ -19,6 +19,7 @@ class ExampleApp(QtGui.QMainWindow, design.Ui_MainWindow):
         self.setupUi(self)  # This is defined in design.py file automatically
         self.pushButton.clicked.connect(self.startLeap)        
     	self.pushButton.clicked.connect(self.startKey)
+
     def keyPressEvent(self, event):
         super(ExampleApp, self).keyPressEvent(event)
         self.keyPressed.emit(event)
@@ -29,7 +30,6 @@ class main():
     form = ExampleApp()  # We set the form to be our ExampleApp (design)
     form.show()  # Show the form
     app.exec_()  # and execute the app
-
 
 if __name__ == '__main__':  # if we're running file directly and not importing it
     main()  # run the main function
